@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SMS Scam Detection</title>
+    <style>
+      :root {
+        --bg: #eef4ff;
+        --panel: #ffffff;
+        --primary: #3b82f6;
+        --primary-dark: #1d4ed8;
+        --danger: #ef4444;
+        --danger-bg: #fee2e2;
+        --success: #16a34a;
+        --success-bg: #dcfce7;
+        --text: #111827;
+        --muted: #4b5563;
+        --light: #f8fafc;
+        --line: #dbeafe;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        background: linear-gradient(135deg, #eef4ff, #f8fbff);
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 32px auto;
+        padding: 0 20px;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+
+      .header .icon {
+        font-size: 2rem;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 2.3rem;
+      }
+
+      .subtitle {
+        margin: 0 0 28px;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
+      }
+
+      .input-panel {
+        padding: 18px;
+      }
+
+      .panel-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0 0 12px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 300px;
+        resize: vertical;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+        font-size: 1rem;
+        font-family: inherit;
+        background: #f8fbff;
+        outline: none;
+      }
+
+      textarea:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      button {
+        border: none;
+        border-radius: 10px;
+        padding: 12px 22px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .primary-btn {
+        background: var(--primary);
+        color: white;
+      }
+
+      .primary-btn:hover {
+        background: var(--primary-dark);
+      }
+
+      .secondary-btn {
+        background: #e5e7eb;
+        color: var(--text);
+      }
+
+      .secondary-btn:hover {
+        background: #d1d5db;
+      }
+
+      .side-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .result-box,
+      .history-box {
+        padding: 18px;
+      }
+
+      .result-box {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+      }
+
+      .result-label {
+        display: inline-block;
+        width: 100%;
+        text-align: center;
+        padding: 20px 12px;
+        margin: 0 0 12px;
+        border-radius: 12px;
+        background: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
+
+      .confidence {
+        text-align: center;
+        font-size: 1rem;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .history-box {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        min-height: 260px;
+      }
+
+      .history-list {
+        list-style: none;
+        margin: 18px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .history-item {
+        background: var(--light);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .history-item strong {
+        color: var(--text);
+      }
+
+      @media (max-width: 860px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="icon">🛡️</div>
+        <h1>SMS Scam Detection</h1>
+      </div>
+      <p class="subtitle">Check suspicious messages before you trust them.</p>
+
+      <div class="app">
+        <section class="panel input-panel">
+          <h2 class="panel-title">📩 SMS Input</h2>
+          <textarea id="smsInput">Congratulations! You have won a free prize. Reply YES to claim your reward now.</textarea>
+          <div class="actions">
+            <button class="primary-btn" id="checkBtn">🔍 Check SMS</button>
+            <button class="secondary-btn" id="clearBtn">🗑 Clear</button>
+          </div>
+        </section>
+
+        <aside class="side-panel">
+          <section class="result-box">
+            <h2 class="panel-title">📊 Result</h2>
+            <div id="resultLabel" class="result-label">Waiting for input</div>
+            <p id="confidence" class="confidence">Confidence: --</p>
+          </section>
+
+          <section class="history-box">
+            <h2 class="panel-title">🕘 History</h2>
+            <ul id="historyList" class="history-list">
+              <li class="history-item"><strong>No checks yet.</strong></li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      const input = document.getElementById('smsInput');
+      const resultLabel = document.getElementById('resultLabel');
+      const confidence = document.getElementById('confidence');
+      const historyList = document.getElementById('historyList');
+
+      const setResult = (text, type) => {
+        resultLabel.textContent = text;
+        resultLabel.style.background = type === 'spam' ? '#fee2e2' : '#dcfce7';
+        resultLabel.style.color = type === 'spam' ? '#b91c1c' : '#166534';
+      };
+
+      const addHistoryItem = (message, result, score) => {
+        const item = document.createElement('li');
+        item.className = 'history-item';
+        const shortMessage = message.length > 90 ? message.slice(0, 90) + '...' : message;
+        item.innerHTML = `<strong>${result}</strong> · ${score.toFixed(1)}%<br>${shortMessage}`;
+
+        const firstChild = historyList.firstChild;
+        historyList.insertBefore(item, firstChild);
+
+        while (historyList.children.length > 7) {
+          historyList.removeChild(historyList.lastChild);
+        }
+      };
+
+      document.getElementById('checkBtn').addEventListener('click', async () => {
+        const message = input.value.trim();
+        if (!message) {
+          setResult('Please enter a message', 'neutral');
+          confidence.textContent = 'Confidence: --';
+          return;
+        }
+
+        try {
+          const response = await fetch('/api/check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Request failed');
+          }
+
+          const resultText = data.result;
+          const resultType = resultText.includes('spam') ? 'spam' : 'safe';
+          setResult(resultText, resultType);
+          confidence.textContent = `Confidence: ${data.confidence}%`;
+          addHistoryItem(message, resultText, data.confidence);
+        } catch (error) {
+          setResult('Error: ' + error.message, 'neutral');
+          confidence.textContent = 'Confidence: --';
+        }
+      });
+
+      document.getElementById('clearBtn').addEventListener('click', () => {
+        input.value = '';
+        setResult('Waiting for input', 'neutral');
+        confidence.textContent = 'Confidence: --';
+      });
+    </script>
+  </body>
+</html>
